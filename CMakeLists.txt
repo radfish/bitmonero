@@ -412,7 +412,7 @@ else()
     # There is a clang bug that does not allow to compile code that uses AES-NI intrinsics if -flto is enabled, so explicitly disable
     set(USE_LTO false)
     # explicitly define stdlib for older versions of clang
-    if(CMAKE_C_COMPILER_VERSION VERSION_LESS 3.7)
+    if(CMAKE_C_COMPILER_VERSION VERSION_LESS 3.4)
       set(COMMON_CXX_FLAGS "${COMMON_CXX_FLAGS} -stdlib=libc++")
       set(COMMON_EXE_LINKER_FLAGS "${COMMON_EXE_LINKER_FLAGS} -stdlib=libc++")
     endif()
