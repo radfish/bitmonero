@@ -1,0 +1,1 @@
+set(OPT_FLAGS_RELEASE "-O2")

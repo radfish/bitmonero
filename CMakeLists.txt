@@ -30,6 +30,9 @@
 
 cmake_minimum_required(VERSION 2.8.7)
 
+list(INSERT CMAKE_MODULE_PATH 0
+  "${CMAKE_SOURCE_DIR}/cmake")
+
 project(bitmonero)
 
 function (die msg)
@@ -45,33 +48,6 @@ function (die msg)
   message(FATAL_ERROR "${BoldRed}${msg}${ColourReset}")
 endfunction ()
 
-if ("${ARCH}" STREQUAL "" OR "${ARCH}" STREQUAL "native")
-  set(ARCH ${CMAKE_SYSTEM_PROCESSOR})
-  message(STATUS "Building natively on ${ARCH}")
-endif()
-
-if (NOT "${ARCH}" STREQUAL "")
-  string(SUBSTRING ${ARCH} 0 3 IS_ARM)
-  string(TOLOWER ${IS_ARM} IS_ARM)
-
-  if (${IS_ARM} STREQUAL "arm")
-    string(SUBSTRING ${ARCH} 0 5 ARM_TEST)
-    string(TOLOWER ${ARM_TEST} ARM_TEST)
-
-    if (${ARM_TEST} STREQUAL "armv6")
-      set(ARM6 1)
-    else()
-      set(ARM6 0)
-    endif()
-
-    if (${ARM_TEST} STREQUAL "armv7")
-      set(ARM7 1)
-    else()
-      set(ARM7 0)
-    endif()
-  endif()
-endif()
-
 option(NATIVE "Optimize target binary for host architecture" 1)
 
 if(NATIVE AND CMAKE_COMPILER_IS_GNUCXX)
@@ -79,16 +55,18 @@ if(NATIVE AND CMAKE_COMPILER_IS_GNUCXX)
   add_compile_options("-march=native" "-mtune=native")
 endif()
 
-set(CMAKE_C_FLAGS_RELEASE "-DNDEBUG")
-set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG")
-
-if(WIN32 OR ARM7 OR ARM6)
-  set(CMAKE_C_FLAGS_RELEASE "-O2")
-  set(CMAKE_CXX_FLAGS_RELEASE "-O2")
-else()
-  set(CMAKE_C_FLAGS_RELEASE "-Ofast")
-  set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
+# OPT_FLAGS_RELEASE might be set arch-specific script cmake/Platform/*
+if(NOT DEFINED OPT_FLAGS_RELEASE)
+  if(WIN32)
+    set(OPT_FLAGS_RELEASE"-O2")
+  else()
+    set(OPT_FLAGS_RELEASE "-Ofast")
+  endif()
 endif()
+
+# NOTE: override cmake's system default optimization flags
+set(CMAKE_C_FLAGS_RELEASE "-DNDEBUG ${OPT_FLAGS_RELEASE}")
+set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG ${OPT_FLAGS_RELEASE}")
 
 # set this to 0 if per-block checkpoint needs to be disabled
 set(PER_BLOCK_CHECKPOINT 1)
@@ -96,9 +74,6 @@ set(PER_BLOCK_CHECKPOINT 1)
 if(PER_BLOCK_CHECKPOINT)
   add_definitions("-DPER_BLOCK_CHECKPOINT")
 endif()
-
-list(INSERT CMAKE_MODULE_PATH 0
-  "${CMAKE_SOURCE_DIR}/cmake")
 
 if (NOT DEFINED ENV{DEVELOPER_LOCAL_TOOLS})
   message(STATUS "Could not find DEVELOPER_LOCAL_TOOLS in env (not required)")
@@ -327,9 +302,8 @@ else()
   endif()
   if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(WARNINGS "${WARNINGS} -Wno-deprecated-register -Wno-error=mismatched-tags -Wno-error=null-conversion -Wno-overloaded-shift-op-parentheses -Wno-error=shift-count-overflow -Wno-error=tautological-constant-out-of-range-compare -Wno-error=unused-private-field -Wno-error=unneeded-internal-declaration")
-    if(ARM6 OR ARM7)
-      set(WARNINGS "${WARNINGS} -Wno-error=inline-asm")
-    endif()
+    # Let warning about ASM issued on ARM be non-fatal, until fixed in code
+    set(WARNINGS "${WARNINGS} -Wno-error=inline-asm")
   else()
     set(WARNINGS "${WARNINGS} -Wlogical-op -Wno-error=maybe-uninitialized")
   endif()
