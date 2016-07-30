@@ -76,7 +76,6 @@ if(PER_BLOCK_CHECKPOINT)
 endif()
 
 if (NOT DEFINED ENV{DEVELOPER_LOCAL_TOOLS})
-  message(STATUS "Could not find DEVELOPER_LOCAL_TOOLS in env (not required)")
   set(BOOST_IGNORE_SYSTEM_PATHS_DEFAULT OFF)
 elseif ("$ENV{DEVELOPER_LOCAL_TOOLS}" EQUAL 1)
   message(STATUS "Found: env DEVELOPER_LOCAL_TOOLS = 1")
@@ -91,7 +90,6 @@ option(BOOST_IGNORE_SYSTEM_PATHS "Ignore boost system paths for local boost inst
 
 
 if (NOT DEFINED ENV{DEVELOPER_LIBUNBOUND_OLD})
-  message(STATUS "Could not find DEVELOPER_LIBUNBOUND_OLD in env (not required)")
 elseif ("$ENV{DEVELOPER_LIBUNBOUND_OLD}" EQUAL 1)
   message(STATUS "Found: env DEVELOPER_LIBUNBOUND_OLD = 1, will use the work around")
   add_definitions(-DDEVELOPER_LIBUNBOUND_OLD)
@@ -182,10 +180,8 @@ set(DATABASE lmdb)
 
 if (DEFINED ENV{DATABASE})
   set(DATABASE $ENV{DATABASE})
-  message(STATUS "DATABASE set: ${DATABASE}")
-else()
-  message(STATUS "Could not find DATABASE in env (not required unless you want to change database type from default: ${DATABASE})")
 endif()
+message(STATUS "Using database type: ${DATABASE}")
 
 set(BERKELEY_DB_OVERRIDE 0)
 if (DEFINED ENV{BERKELEY_DB})
