@@ -141,15 +141,15 @@ namespace
   TEST_F(block_reward_and_current_block_size, fails_on_huge_median_size)
   {
 #if !defined(NDEBUG)
-    size_t huge_size = std::numeric_limits<uint32_t>::max() + UINT64_C(2);
-    ASSERT_DEATH(do_test(huge_size, huge_size + 1), "");
+    size_t huge_size = std::numeric_limits<uint32_t>::max();
+    ASSERT_DEATH(do_test(huge_size, huge_size - 2), "");
 #endif
   }
 
   TEST_F(block_reward_and_current_block_size, fails_on_huge_block_size)
   {
 #if !defined(NDEBUG)
-    size_t huge_size = std::numeric_limits<uint32_t>::max() + UINT64_C(2);
+    size_t huge_size = std::numeric_limits<uint32_t>::max();
     ASSERT_DEATH(do_test(huge_size - 2, huge_size), "");
 #endif
   }

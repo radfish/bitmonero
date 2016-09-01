@@ -92,18 +92,18 @@ namespace cryptonote {
       median_size = full_reward_zone;
     }
 
+    assert(median_size < std::numeric_limits<uint32_t>::max());
+    assert(current_block_size < std::numeric_limits<uint32_t>::max());
+
     if (current_block_size <= median_size) {
       reward = base_reward;
       return true;
     }
 
-    if(current_block_size > 2 * median_size) {
+    if(current_block_size > 2ULL * median_size) {
       LOG_PRINT_L4("Block cumulative size is too big: " << current_block_size << ", expected less than " << 2 * median_size);
       return false;
     }
-
-    assert(median_size < std::numeric_limits<uint32_t>::max());
-    assert(current_block_size < std::numeric_limits<uint32_t>::max());
 
     uint64_t product_hi;
     // BUGFIX: 32-bit saturation bug (e.g. ARM7), the result was being
