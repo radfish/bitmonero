@@ -106,7 +106,7 @@ namespace cryptonote
     return true;
   }
   //---------------------------------------------------------------
-  bool construct_miner_tx(size_t height, size_t median_size, uint64_t already_generated_coins, size_t current_block_size, uint64_t fee, const account_public_address &miner_address, transaction& tx, const blobdata& extra_nonce, size_t max_outs, uint8_t hard_fork_version) {
+  bool construct_miner_tx(uint64_t height, uint64_t median_size, uint64_t already_generated_coins, uint64_t current_block_size, uint64_t fee, const account_public_address &miner_address, transaction& tx, const blobdata& extra_nonce, uint64_t max_outs, uint8_t hard_fork_version) {
     tx.vin.clear();
     tx.vout.clear();
     tx.extra.clear();
@@ -157,7 +157,7 @@ namespace cryptonote
         //out_amounts[out_amounts.size() - 2] += out_amounts.back();
         //out_amounts.resize(out_amounts.size() - 1);
         out_amounts[1] += out_amounts[0];
-        for (size_t n = 1; n < out_amounts.size(); ++n)
+        for (uint64_t n = 1; n < out_amounts.size(); ++n)
           out_amounts[n - 1] = out_amounts[n];
         out_amounts.resize(out_amounts.size() - 1);
       }
@@ -168,7 +168,7 @@ namespace cryptonote
     }
 
     uint64_t summary_amounts = 0;
-    for (size_t no = 0; no < out_amounts.size(); no++)
+    for (uint64_t no = 0; no < out_amounts.size(); no++)
     {
       crypto::key_derivation derivation = AUTO_VAL_INIT(derivation);;
       crypto::public_key out_eph_public_key = AUTO_VAL_INIT(out_eph_public_key);
@@ -202,7 +202,7 @@ namespace cryptonote
     return true;
   }
   //---------------------------------------------------------------
-  bool generate_key_image_helper(const account_keys& ack, const crypto::public_key& tx_public_key, size_t real_output_index, keypair& in_ephemeral, crypto::key_image& ki)
+  bool generate_key_image_helper(const account_keys& ack, const crypto::public_key& tx_public_key, uint64_t real_output_index, keypair& in_ephemeral, crypto::key_image& ki)
   {
     crypto::key_derivation recv_derivation = AUTO_VAL_INIT(recv_derivation);
     bool r = crypto::generate_key_derivation(tx_public_key, ack.m_view_secret_key, recv_derivation);
@@ -232,8 +232,8 @@ namespace cryptonote
     std::string str_amount = str_amount_;
     boost::algorithm::trim(str_amount);
 
-    size_t point_index = str_amount.find_first_of('.');
-    size_t fraction_size;
+    uint64_t point_index = str_amount.find_first_of('.');
+    uint64_t fraction_size;
     if (std::string::npos != point_index)
     {
       fraction_size = str_amount.size() - point_index - 1;
@@ -353,7 +353,7 @@ namespace cryptonote
   bool add_extra_nonce_to_tx_extra(std::vector<uint8_t>& tx_extra, const blobdata& extra_nonce)
   {
     CHECK_AND_ASSERT_MES(extra_nonce.size() <= TX_EXTRA_NONCE_MAX_COUNT, false, "extra nonce could be 255 bytes max");
-    size_t start_pos = tx_extra.size();
+    uint64_t start_pos = tx_extra.size();
     tx_extra.resize(tx_extra.size() + 2 + extra_nonce.size());
     //write tag
     tx_extra[start_pos] = TX_EXTRA_NONCE;
@@ -435,7 +435,7 @@ namespace cryptonote
   {
     if (destinations.empty())
       return null_pkey;
-    for (size_t n = 1; n < destinations.size(); ++n)
+    for (uint64_t n = 1; n < destinations.size(); ++n)
     {
       if (!memcmp(&destinations[n].addr, &sender_keys.m_account_address, sizeof(destinations[0].addr)))
         continue;
@@ -458,7 +458,7 @@ namespace cryptonote
     data[32] = ENCRYPTED_PAYMENT_ID_TAIL;
     cn_fast_hash(data, 33, hash);
 
-    for (size_t b = 0; b < 8; ++b)
+    for (uint64_t b = 0; b < 8; ++b)
       payment_id.data[b] ^= hash.data[b];
 
     return true;
@@ -580,7 +580,7 @@ namespace cryptonote
 
     uint64_t summary_outs_money = 0;
     //fill outputs
-    size_t output_index = 0;
+    uint64_t output_index = 0;
     BOOST_FOREACH(const tx_destination_entry& dst_entr,  shuffled_dsts)
     {
       CHECK_AND_ASSERT_MES(dst_entr.amount > 0 || tx.version > 1, false, "Destination with wrong amount: " << dst_entr.amount);
@@ -623,13 +623,13 @@ namespace cryptonote
       get_transaction_prefix_hash(tx, tx_prefix_hash);
 
       std::stringstream ss_ring_s;
-      size_t i = 0;
+      uint64_t i = 0;
       BOOST_FOREACH(const tx_source_entry& src_entr,  sources)
       {
         ss_ring_s << "pub_keys:" << ENDL;
         std::vector<const crypto::public_key*> keys_ptrs;
         std::vector<crypto::public_key> keys(src_entr.outputs.size());
-        size_t ii = 0;
+        uint64_t ii = 0;
         BOOST_FOREACH(const tx_source_entry::output_entry& o, src_entr.outputs)
         {
           keys[ii] = rct2pk(o.second.dest);
@@ -653,7 +653,7 @@ namespace cryptonote
     else
     {
       bool all_rct_inputs = true;
-      size_t n_total_outs = sources[0].outputs.size(); // only for non-simple rct
+      uint64_t n_total_outs = sources[0].outputs.size(); // only for non-simple rct
       BOOST_FOREACH(const tx_source_entry& src_entr,  sources)
         all_rct_inputs &= !(src_entr.mask == rct::identity());
 
@@ -674,7 +674,7 @@ namespace cryptonote
         }
 
         // enforce same mixin for all outputs
-        for (size_t i = 1; i < sources.size(); ++i) {
+        for (uint64_t i = 1; i < sources.size(); ++i) {
           if (n_total_outs != sources[i].outputs.size()) {
             LOG_ERROR("Non-simple ringct transaction has varying mixin");
             return false;
@@ -689,7 +689,7 @@ namespace cryptonote
       rct::keyV destinations;
       std::vector<uint64_t> inamounts, outamounts;
       std::vector<unsigned int> index;
-      for (size_t i = 0; i < sources.size(); ++i)
+      for (uint64_t i = 0; i < sources.size(); ++i)
       {
         rct::ctkey ctkey;
         amount_in += sources[i].amount;
@@ -702,7 +702,7 @@ namespace cryptonote
         // inPk: (public key, commitment)
         // will be done when filling in mixRing
       }
-      for (size_t i = 0; i < tx.vout.size(); ++i)
+      for (uint64_t i = 0; i < tx.vout.size(); ++i)
       {
         destinations.push_back(rct::pk2rct(boost::get<txout_to_key>(tx.vout[i].target).key));
         outamounts.push_back(tx.vout[i].amount);
@@ -712,10 +712,10 @@ namespace cryptonote
       if (use_simple_rct)
       {
         // mixRing indexing is done the other way round for simple
-        for (size_t i = 0; i < sources.size(); ++i)
+        for (uint64_t i = 0; i < sources.size(); ++i)
         {
           mixRing[i].resize(sources[i].outputs.size());
-          for (size_t n = 0; n < sources[i].outputs.size(); ++n)
+          for (uint64_t n = 0; n < sources[i].outputs.size(); ++n)
           {
             mixRing[i][n] = sources[i].outputs[n].second;
           }
@@ -723,10 +723,10 @@ namespace cryptonote
       }
       else
       {
-        for (size_t i = 0; i < n_total_outs; ++i) // same index assumption
+        for (uint64_t i = 0; i < n_total_outs; ++i) // same index assumption
         {
           mixRing[i].resize(sources.size());
-          for (size_t n = 0; n < sources.size(); ++n)
+          for (uint64_t n = 0; n < sources.size(); ++n)
           {
             mixRing[i][n] = sources[n].outputs[i].second;
           }
@@ -738,12 +738,12 @@ namespace cryptonote
         outamounts.push_back(amount_in - amount_out);
 
       // zero out all amounts to mask rct outputs, real amounts are now encrypted
-      for (size_t i = 0; i < tx.vin.size(); ++i)
+      for (uint64_t i = 0; i < tx.vin.size(); ++i)
       {
         if (sources[i].rct)
           boost::get<txin_to_key>(tx.vin[i]).amount = 0;
       }
-      for (size_t i = 0; i < tx.vout.size(); ++i)
+      for (uint64_t i = 0; i < tx.vout.size(); ++i)
         tx.vout[i].amount = 0;
 
       crypto::hash tx_prefix_hash;
@@ -864,7 +864,7 @@ namespace cryptonote
     return res;
   }
   //---------------------------------------------------------------
-  bool is_out_to_acc(const account_keys& acc, const txout_to_key& out_key, const crypto::public_key& tx_pub_key, size_t output_index)
+  bool is_out_to_acc(const account_keys& acc, const txout_to_key& out_key, const crypto::public_key& tx_pub_key, uint64_t output_index)
   {
     crypto::key_derivation derivation;
     generate_key_derivation(tx_pub_key, acc.m_view_secret_key, derivation);
@@ -873,7 +873,7 @@ namespace cryptonote
     return pk == out_key.key;
   }
   //---------------------------------------------------------------
-  bool lookup_acc_outs(const account_keys& acc, const transaction& tx, std::vector<size_t>& outs, uint64_t& money_transfered)
+  bool lookup_acc_outs(const account_keys& acc, const transaction& tx, std::vector<uint64_t>& outs, uint64_t& money_transfered)
   {
     crypto::public_key tx_pub_key = get_tx_pub_key_from_extra(tx);
     if(null_pkey == tx_pub_key)
@@ -881,10 +881,10 @@ namespace cryptonote
     return lookup_acc_outs(acc, tx, tx_pub_key, outs, money_transfered);
   }
   //---------------------------------------------------------------
-  bool lookup_acc_outs(const account_keys& acc, const transaction& tx, const crypto::public_key& tx_pub_key, std::vector<size_t>& outs, uint64_t& money_transfered)
+  bool lookup_acc_outs(const account_keys& acc, const transaction& tx, const crypto::public_key& tx_pub_key, std::vector<uint64_t>& outs, uint64_t& money_transfered)
   {
     money_transfered = 0;
-    size_t i = 0;
+    uint64_t i = 0;
     BOOST_FOREACH(const tx_out& o,  tx.vout)
     {
       CHECK_AND_ASSERT_MES(o.target.type() ==  typeid(txout_to_key), false, "wrong type id in transaction out" );
@@ -933,12 +933,12 @@ namespace cryptonote
     return get_transaction_hash(t, res, NULL);
   }
   //---------------------------------------------------------------
-  bool get_transaction_hash(const transaction& t, crypto::hash& res, size_t* blob_size)
+  bool get_transaction_hash(const transaction& t, crypto::hash& res, uint64_t* blob_size)
   {
     // v1 transactions hash the entire blob
     if (t.version == 1)
     {
-      size_t ignored_blob_size, &blob_size_ref = blob_size ? *blob_size : ignored_blob_size;
+      uint64_t ignored_blob_size, &blob_size_ref = blob_size ? *blob_size : ignored_blob_size;
       return get_object_hash(t, res, blob_size_ref);
     }
 
@@ -964,7 +964,7 @@ namespace cryptonote
     return true;
   }
   //---------------------------------------------------------------
-  bool get_transaction_hash(const transaction& t, crypto::hash& res, size_t& blob_size)
+  bool get_transaction_hash(const transaction& t, crypto::hash& res, uint64_t& blob_size)
   {
     return get_transaction_hash(t, res, &blob_size);
   }
@@ -1023,7 +1023,7 @@ namespace cryptonote
 
 
     account_public_address ac = boost::value_initialized<account_public_address>();
-    std::vector<size_t> sz;
+    std::vector<uint64_t> sz;
     construct_miner_tx(0, 0, 0, 0, 0, ac, bl.miner_tx); // zero fee in genesis
     blobdata txb = tx_to_blob(bl.miner_tx);
     std::string hex_tx_represent = string_tools::buff_to_hex_nodelimer(txb);
@@ -1060,7 +1060,7 @@ namespace cryptonote
   std::vector<uint64_t> relative_output_offsets_to_absolute(const std::vector<uint64_t>& off)
   {
     std::vector<uint64_t> res = off;
-    for(size_t i = 1; i < res.size(); i++)
+    for(uint64_t i = 1; i < res.size(); i++)
       res[i] += res[i-1];
     return res;
   }
@@ -1071,7 +1071,7 @@ namespace cryptonote
     if(!off.size())
       return res;
     std::sort(res.begin(), res.end());//just to be sure, actually it is already should be sorted
-    for(size_t i = res.size()-1; i != 0; i--)
+    for(uint64_t i = res.size()-1; i != 0; i--)
       res[i] -= res[i-1];
 
     return res;
@@ -1130,7 +1130,7 @@ namespace cryptonote
   {
     std::vector<crypto::hash> txs_ids;
     crypto::hash h = null_hash;
-    size_t bl_sz = 0;
+    uint64_t bl_sz = 0;
     get_transaction_hash(b.miner_tx, h, bl_sz);
     txs_ids.push_back(h);
     BOOST_FOREACH(auto& th, b.tx_hashes)
