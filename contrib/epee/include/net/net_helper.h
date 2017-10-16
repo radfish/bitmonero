@@ -576,7 +576,7 @@ namespace net_utils
 				m_io_service.run_one();
 			}
 			// Ignore "short read" error
-			if (ec.category() == boost::asio::error::get_ssl_category() && ec.value() != ERR_PACK(ERR_LIB_SSL, 0, SSL_R_SHORT_READ))
+			if (ec.category() == boost::asio::error::get_ssl_category() && ec.value() != boost::asio::ssl::error::stream_truncated)
 				MDEBUG("Problems at ssl shutdown: " << ec.message());
 		}
 		
