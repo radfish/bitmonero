@@ -50,5 +50,4 @@ target_link_libraries(epee
     ${Boost_FILESYSTEM_LIBRARY}
   PRIVATE
     ${OPENSSL_LIBRARIES}
-    crypto
     ${EXTRA_LIBRARIES})
